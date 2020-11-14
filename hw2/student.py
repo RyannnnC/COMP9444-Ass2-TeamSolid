@@ -102,7 +102,12 @@ class loss(tnn.Module):
         super(loss, self).__init__()
 
     def forward(self, ratingOutput, categoryOutput, ratingTarget, categoryTarget):
-        pass
+        rloss = tnn.functional.cross_entropy(ratingOutput,ratingTarget)
+
+        closs = tnn.functional.cross_entropy(categoryOutput, categoryTarget)
+
+        loss = 2 * closs + rloss
+        return loss
 
 net = network()
 lossFunc = loss()
