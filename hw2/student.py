@@ -86,12 +86,42 @@ class network(tnn.Module):
     should return an output for both the rating and the business category.
     """
 
-    def __init__(self):
+    def __init__(self, batch_size, binary, multi):
         super(network, self).__init__()
+        self.batch_size = batch_size
+        self.hidden_size_bi = binary[0]
+        self.layers_bi = binary[1]
+
+        self.lstm_bi= tnn.LSTM(300, self.hidden_size_bi, self.layers_bi)
+
+        self.label_bi = tnn.Linear(self.hidden_size_bi, 2)
+
+        self.dropout_bi = tnn.Dropout(binary[2])
+
+
+        #TODO:multi classifier #multi=[hidden size, layer,dropout] for dealing with businesscatogary #realize lstm network
+
+
+        self.lstm = tnn.LSTM(300, self.hidden_size, num_layers= self.layers, batch_first=True, bidirectional=True, dropout=dropout)
+
+        self.label = tnn.Linear(self.hidden_size, self.layers)
+
+        self.dropout=tnn.Dropout(dropout)
 
     def forward(self, input, length):
-        pass
+        
+		if length is None:
+			h_0 = Variable(torch.zeros(1, self.batch_size, self.hidden_size).cuda()) # Initial hidden state of the LSTM
+			c_0 = Variable(torch.zeros(1, self.batch_size, self.hidden_size).cuda()) # Initial cell state of the LSTM
+		else:
+			h_0 = Variable(torch.zeros(1, length, self.hidden_size).cuda())
+			c_0 = Variable(torch.zeros(1, length, self.hidden_size).cuda())
 
+        output, _ = self.lstm(embed, (h_0,c_0))
+
+        final_output = self.label(output[:,-1,:])
+
+        return final_output
 class loss(tnn.Module):
     """
     Class for creating the loss function.  The labels and outputs from your
