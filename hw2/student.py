@@ -73,13 +73,11 @@ def convertNetOutput(ratingOutput, categoryOutput):
     outputs a different representation convert the output here.
     """
 
-    ratingOutput = ratingOutput.round()
-    ratingOutput[ratingOutput > 1] = 1.0
-    ratingOutput[ratingOutput < 0] = 0.0
+    ratingOutput = torch.sigmoid(ratingOutput).argmax(dim=1)
 
-    categoryOutput = categoryOutput.round()
-    categoryOutput[categoryOutput > 5] = 5.0
-    categoryOutput[categoryOutput < 1] = 1.0
+
+    categoryOutput = torch.softmax(categoryOutput).argmax(dim=1)
+
 
     return ratingOutput, categoryOutput
 
@@ -160,7 +158,7 @@ class loss(tnn.Module):
 
         closs = tnn.functional.cross_entropy(categoryOutput, categoryTarget)
 
-        loss = 2 * closs + rloss
+        loss = closs + rloss
         return loss
 
 net = network()
