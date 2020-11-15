@@ -73,10 +73,10 @@ def convertNetOutput(ratingOutput, categoryOutput):
     outputs a different representation convert the output here.
     """
 
-    ratingOutput = tnn.functional.sigmoid(ratingOutput).argmax(dim=1)
+    ratingOutput = torch.sigmoid(ratingOutput).argmax(dim=1)
 
 
-    categoryOutput = tnn.functional.softmax(categoryOutput).argmax(dim=1)
+    categoryOutput = torch.softmax(categoryOutput,dim=1).argmax(dim=1)
 
 
     return ratingOutput, categoryOutput
