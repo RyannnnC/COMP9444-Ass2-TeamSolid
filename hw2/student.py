@@ -132,18 +132,18 @@ class network(tnn.Module):
 
         embed=self.dropout(input)
 
-        hb_0 = Variable(torch.zeros(self.layers_bi, length[0], self.hidden_size_bi).to(device))
-        cb_0 = Variable(torch.zeros(self.layers_bi, length[0], self.hidden_size_bi).to(device))
+        h_0_bi = Variable(torch.zeros(self.layers_bi, length[0], self.hidden_size_bi).to(device))
+        c_0_bi = Variable(torch.zeros(self.layers_bi, length[0], self.hidden_size_bi).to(device))
 
         h_0 = Variable(torch.zeros(self.layers, length[1], self.hidden_size).to(device))
         c_0 = Variable(torch.zeros(self.layers, length[1], self.hidden_size).to(device))
 
 
-        output_bi, _ = self.lstm_bi(embed_bi, (hb_0,cb_0))
+        output_bi, _ = self.lstm_bi(embed_bi, (h_0_bi,c_0_bi))
         final_output_bi = self.label_bi(output_bi[:,-1,:])
 
-     #   output, _ = self.lstm(embed, (h_0,c_0))
-     #   final_output = self.label(output[:,-1,:])
+        output, _ = self.lstm(embed, (h_0,c_0))
+        final_output = self.label(output[:,-1,:])
 
         return final_output_bi,final_output_bi
 class loss(tnn.Module):
@@ -158,10 +158,10 @@ class loss(tnn.Module):
     def forward(self, ratingOutput, categoryOutput, ratingTarget, categoryTarget):
         rloss = tnn.functional.cross_entropy(ratingOutput,ratingTarget)
 
-       # closs = tnn.functional.cross_entropy(categoryOutput, categoryTarget)
+        closs = tnn.functional.cross_entropy(categoryOutput, categoryTarget)
 
-       # loss = 2 * closs + rloss
-        return rloss
+        loss = 2 * closs + rloss
+        return loss
 
 net = network()
 lossFunc = loss()
