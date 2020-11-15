@@ -19,12 +19,13 @@ You may change this variable in the config.py file.
 You may only use GloVe 6B word vectors as found in the torchtext package.
 """
 
-# import torch
+import torch
 import torch.nn as tnn
 import torch.optim as toptim
 from torchtext.vocab import GloVe
 # import numpy as np
 # import sklearn
+from torch.autograd import Variable
 
 from config import device
 
@@ -56,7 +57,8 @@ def postprocessing(batch, vocab):
     return batch
 
 stopWords = {}
-wordVectors = GloVe(name='6B', dim=50)
+wordVectorDimension = 100
+wordVectors = GloVe(name='6B', dim=wordVectorDimension)
 
 ################################################################################
 ####### The following determines the processing of label data (ratings) ########
@@ -70,6 +72,14 @@ def convertNetOutput(ratingOutput, categoryOutput):
     rating, and 0, 1, 2, 3, or 4 for the business category.  If your network
     outputs a different representation convert the output here.
     """
+
+    ratingOutput = ratingOutput.round()
+    ratingOutput[ratingOutput > 1] = 1.0
+    ratingOutput[ratingOutput < 0] = 0.0
+
+    categoryOutput = categoryOutput.round()
+    categoryOutput[categoryOutput > 5] = 5.0
+    categoryOutput[categoryOutput < 1] = 1.0
 
     return ratingOutput, categoryOutput
 
@@ -86,44 +96,54 @@ class network(tnn.Module):
     should return an output for both the rating and the business category.
     """
 
-    def __init__(self, batch_size, binary, multi):
+    def __init__(self):
         super(network, self).__init__()
-        self.batch_size = batch_size
+        multl=[50, 1, 0.5]
+
+        binary=[50, 1, 0.5]
+        
+        #binary classifier #binary=[hidden size, layer,dropout] for dealing with ratingoutput
+        self.batch_size = batchSize
+
         self.hidden_size_bi = binary[0]
         self.layers_bi = binary[1]
 
-        self.lstm_bi= tnn.LSTM(300, self.hidden_size_bi, self.layers_bi)
+        # Initializing the look-up table.
 
+        self.lstm_bi= tnn.LSTM(wordVectorDimension, self.hidden_size_bi, self.layers_bi)
         self.label_bi = tnn.Linear(self.hidden_size_bi, 2)
-
         self.dropout_bi = tnn.Dropout(binary[2])
 
 
-        #TODO:multi classifier #multi=[hidden size, layer,dropout] for dealing with businesscatogary #realize lstm network
+        #multi classifier #multi=[hidden size, layer,dropout] for dealing with businesscatogary 
 
+        self.hidden_size = multl[0]
+        self.layers = multl[1]
 
-        self.lstm = tnn.LSTM(300, self.hidden_size, num_layers= self.layers, batch_first=True, bidirectional=True, dropout=dropout)
+        # Initializing the look-up table.
 
-        self.label = tnn.Linear(self.hidden_size, self.layers)
-
-        self.dropout=tnn.Dropout(dropout)
+        self.lstm= tnn.LSTM(wordVectorDimension, self.hidden_size, self.layers)
+        self.label = tnn.Linear(self.hidden_size, 5)
+        self.dropout = tnn.Dropout(multl[2])
 
     def forward(self, input, length):
         
-        embed=self.dropout(x)
+        embed=self.dropout(input)
         
-		if length is None:
-			h_0 = Variable(torch.zeros(1, self.batch_size, self.hidden_size).cuda()) # Initial hidden state of the LSTM
-			c_0 = Variable(torch.zeros(1, self.batch_size, self.hidden_size).cuda()) # Initial cell state of the LSTM
-		else:
-			h_0 = Variable(torch.zeros(1, length, self.hidden_size).cuda())
-			c_0 = Variable(torch.zeros(1, length, self.hidden_size).cuda())
+        if length is None:
+              h_0 = Variable(torch.zeros(1, self.batch_size, self.hidden_size).cuda()) # Initial hidden state of the LSTM
+              c_0 = Variable(torch.zeros(1, self.batch_size, self.hidden_size).cuda()) # Initial cell state of the LSTM
+        else:
+              h_0 = Variable(torch.zeros(1, length, self.hidden_size).cuda())
+              c_0 = Variable(torch.zeros(1, length, self.hidden_size).cuda())
+
+        output_bi, _ = self.lstm_bi(embed, (h_0,c_0))
+        final_output_bi = self.label_bi(output[:,-1,:])
 
         output, _ = self.lstm(embed, (h_0,c_0))
-
         final_output = self.label(output[:,-1,:])
 
-        return final_output
+        return final_output_bi,final_output
 class loss(tnn.Module):
     """
     Class for creating the loss function.  The labels and outputs from your
@@ -152,3 +172,4 @@ trainValSplit = 0.8
 batchSize = 32
 epochs = 10
 optimiser = toptim.SGD(net.parameters(), lr=0.01)
+
