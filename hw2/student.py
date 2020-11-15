@@ -44,19 +44,40 @@ def tokenise(sample):
 
 def preprocessing(sample):
     """
-    Called after tokenising but before numericalising.
+    remove symbols and non English texts
     """
+    def isword(str):
+        if len(str)<=1:
+            return False
+        for s in str:
+            if s in 'aeiou':
+                return True
+        return False
 
-    return sample
+    result = []
+    symbols = [",",".","?","!","(",")","$","~","n't","'ve","'m'"]
+    for data in sample:
+        for sym in symbols:
+            data = data.replace(sym,"")
+        if data.isalpha()and len(data)>1 and isword(data):
+            result.append(data)
+
+    return result
 
 def postprocessing(batch, vocab):
     """
-    Called after numericalising but before vectorising.
+    remove infrequent words of sentence
     """
+    freq = vocab.freqs
+    Ints = vocab.itos
+    for line in batch:
+        for index,word in enumerate(line):
+            if (freq[Ints[word]]) <3:
+                line[index] = -1
 
     return batch
 
-stopWords = {}
+stopWords = {'i', 'me', 'my', 'myself', 'we', 'our', 'ours', 'ourselves', 'you', "you're", "you've", "you'll", "you'd", 'your', 'yours', 'yourself', 'yourselves', 'he', 'him', 'his', 'himself', 'she', "she's", 'her', 'hers', 'herself', 'it', "it's", 'its', 'itself', 'they', 'them', 'their', 'theirs', 'themselves', 'what', 'which', 'who', 'whom', 'this', 'that', "that'll", 'these', 'those', 'am', 'is', 'are', 'was', 'were', 'be', 'been', 'being', 'have', 'has', 'had', 'having', 'do', 'does', 'did', 'doing', 'a', 'an', 'the', 'and', 'but', 'if', 'or', 'because', 'as', 'until', 'while', 'of', 'at', 'by', 'for', 'with', 'about', 'against', 'between', 'into', 'through', 'during', 'before', 'after', 'above', 'below', 'to', 'from', 'up', 'down', 'in', 'out', 'on', 'off', 'over', 'under', 'again', 'further', 'then', 'once', 'here', 'there', 'when', 'where', 'why', 'how', 'all', 'any', 'both', 'each', 'few', 'more', 'most', 'other', 'some', 'such', 'no', 'nor', 'not', 'only', 'own', 'same', 'so', 'than', 'too', 'very', 's', 't', 'can', 'will', 'just', 'don', "don't", 'should', "should've", 'now', 'd', 'll', 'm', 'o', 're', 've', 'y', 'ain', 'aren', "aren't", 'couldn', "couldn't", 'didn', "didn't", 'doesn', "doesn't", 'hadn', "hadn't", 'hasn', "hasn't", 'haven', "haven't", 'isn', "isn't", 'ma', 'mightn', "mightn't", 'mustn', "mustn't", 'needn', "needn't", 'shan', "shan't", 'shouldn', "shouldn't", 'wasn', "wasn't", 'weren', "weren't", 'won', "won't", 'wouldn', "wouldn't"}
 wordVectorDimension = 300
 wordVectors = GloVe(name='6B', dim=wordVectorDimension)
 
@@ -72,12 +93,8 @@ def convertNetOutput(ratingOutput, categoryOutput):
     rating, and 0, 1, 2, 3, or 4 for the business category.  If your network
     outputs a different representation convert the output here.
     """
-
     ratingOutput = torch.sigmoid(ratingOutput).argmax(dim=1)
-
-
     categoryOutput = torch.softmax(categoryOutput,dim=1).argmax(dim=1)
-
 
     return ratingOutput, categoryOutput
 
@@ -113,7 +130,7 @@ class network(tnn.Module):
         self.dropout_bi = tnn.Dropout(binary[2])
 
 
-        #multi classifier #multi=[hidden size, layer,dropout] for dealing with businesscatogary 
+        #multi classifier #multi=[hidden size, layer,dropout] for dealing with businesscatogary
 
         self.hidden_size = multl[0]
         self.layers = multl[1]
@@ -125,7 +142,7 @@ class network(tnn.Module):
         self.dropout = tnn.Dropout(multl[2])
 
     def forward(self, input, length):
-        
+
         embed_bi=self.dropout_bi(input)
 
         embed=self.dropout(input)
@@ -172,4 +189,3 @@ trainValSplit = 0.8
 batchSize = 32
 epochs = 10
 optimiser = toptim.SGD(net.parameters(), lr=0.01)
-
