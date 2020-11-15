@@ -103,7 +103,7 @@ class network(tnn.Module):
         multl=[50, 1, 0.5]
 
         #binary classifier #binary=[hidden size, layer,dropout] for dealing with ratingoutput
-        self.batch_size = 128
+        self.batch_size = 32
 
         self.hidden_size_bi = binary[0]
         self.layers_bi = binary[1]
@@ -171,7 +171,7 @@ lossFunc = loss()
 ################################################################################
 
 trainValSplit = 0.8
-batchSize = 128
+batchSize = 32
 epochs = 10
 optimiser = toptim.SGD(net.parameters(), lr=0.01)
 
