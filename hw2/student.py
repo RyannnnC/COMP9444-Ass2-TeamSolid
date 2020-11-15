@@ -199,7 +199,7 @@ class loss(tnn.Module):
 
         closs = tnn.functional.cross_entropy(categoryOutput, categoryTarget)
 
-        loss = 2*closs + rloss
+        loss = 0.66*closs + 0.34*rloss
         return loss
 
 net = network()
