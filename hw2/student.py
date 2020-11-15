@@ -139,8 +139,8 @@ class network(tnn.Module):
     def __init__(self):
         super(network, self).__init__()
 
-        binary=[50, 1, 0.5]
-        multl=[50, 1, 0.5]
+        binary=[50, 2, 0.5]
+        multl=[300, 2, 0.5]
 
         #binary classifier #binary=[hidden size, layer,dropout] for dealing with ratingoutput
         self.batch_size = 32
@@ -150,8 +150,10 @@ class network(tnn.Module):
 
         # Initializing the look-up table.
 
-        self.lstm_bi= tnn.LSTM(wordVectorDimension, self.hidden_size_bi, self.layers_bi)
-        self.label_bi = tnn.Linear(self.hidden_size_bi, 2)
+        self.lstm_bi= tnn.LSTM(wordVectorDimension,self.hidden_size_bi, self.layers_bi,bidirectional = True)
+        self.label_L1_bi = tnn.Linear(self.hidden_size_bi * self.layers_bi * 2, 64)
+        self.Relu_bi = tnn.Tanh()
+        self.label_L2_bi = tnn.Linear(64, 2)
         self.dropout_bi = tnn.Dropout(binary[2])
 
 
@@ -162,8 +164,9 @@ class network(tnn.Module):
 
         # Initializing the look-up table.
 
-        self.lstm= tnn.LSTM(wordVectorDimension, self.hidden_size, self.layers)
-        self.label = tnn.Linear(self.hidden_size, 5)
+        self.gru = torch.nn.GRU(wordVectorDimension, self.hidden_size, self.layers, batch_first=True,bidirectional=True)
+        self.fc1 = torch.nn.Linear(self.hidden_size*2, 150)
+        self.fc2 = torch.nn.Linear(150, 5)
         self.dropout = tnn.Dropout(multl[2])
 
     def forward(self, input, length):
@@ -172,20 +175,26 @@ class network(tnn.Module):
 
         embed=self.dropout(input)
 
-        h_0_bi = Variable(torch.zeros(self.layers_bi, length[0], self.hidden_size_bi).to(device))
-        c_0_bi = Variable(torch.zeros(self.layers_bi, length[0], self.hidden_size_bi).to(device))
+        h_0_bi = Variable(torch.zeros(self.layers_bi * 2, length[0], self.hidden_size_bi).to(device))
+        c_0_bi = Variable(torch.zeros(self.layers_bi * 2, length[0], self.hidden_size_bi).to(device))
 
-        h_0 = Variable(torch.zeros(self.layers, length[0], self.hidden_size).to(device))
-        c_0 = Variable(torch.zeros(self.layers, length[0], self.hidden_size).to(device))
+        h_0 = Variable(torch.zeros(self.layers * 2, self.batch_size, self.hidden_size).to(device))
 
 
         output_bi, _ = self.lstm_bi(embed_bi, (h_0_bi,c_0_bi))
-        final_output_bi = self.label_bi(output_bi[:,-1,:])
+        x_bi = torch.cat((output_bi[:, -1, :], output_bi[:, 0, :]), dim=1)
+        x_bi = self.label_L1_bi(x_bi)
+        x_bi = self.Relu_bi(x_bi)
+        final_output_bi = self.label_L2_bi(x_bi)
 
-        output, _ = self.lstm(embed, (h_0,c_0))
-        final_output = self.label(output[:,-1,:])
+        output, _ = self.gru(embed, h_0)
+        output = self.fc1(output)
+        output = self.fc2(output)
+        final_output = output[:,-1,:]
 
         return final_output_bi,final_output
+
+
 class loss(tnn.Module):
     """
     Class for creating the loss function.  The labels and outputs from your
@@ -200,7 +209,7 @@ class loss(tnn.Module):
 
         closs = tnn.functional.cross_entropy(categoryOutput, categoryTarget)
 
-        loss = closs + rloss
+        loss = 2*closs + rloss
         return loss
 
 net = network()
@@ -210,7 +219,7 @@ lossFunc = loss()
 ################## The following determines training options ###################
 ################################################################################
 
-trainValSplit = 0.8
+trainValSplit = 0.9
 batchSize = 32
-epochs = 10
-optimiser = toptim.Adam(net.parameters(), lr=0.01)
+epochs = 5
+optimiser = toptim.Adam(net.parameters(), lr=0.005)
