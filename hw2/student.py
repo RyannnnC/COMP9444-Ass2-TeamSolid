@@ -57,7 +57,7 @@ def postprocessing(batch, vocab):
     return batch
 
 stopWords = {}
-wordVectorDimension = 100
+wordVectorDimension = 300
 wordVectors = GloVe(name='6B', dim=wordVectorDimension)
 
 ################################################################################
@@ -98,12 +98,12 @@ class network(tnn.Module):
 
     def __init__(self):
         super(network, self).__init__()
-        multl=[50, 2, 0.5]
 
-        binary=[50, 2, 0.5]
-        
+        binary=[50, 1, 0.5]
+        multl=[50, 1, 0.5]
+
         #binary classifier #binary=[hidden size, layer,dropout] for dealing with ratingoutput
-        self.batch_size = 32
+        self.batch_size = 128
 
         self.hidden_size_bi = binary[0]
         self.layers_bi = binary[1]
@@ -128,29 +128,24 @@ class network(tnn.Module):
 
     def forward(self, input, length):
         
+        embed_bi=self.dropout_bi(input)
+
         embed=self.dropout(input)
-        
-        if length is None:
-              h_0 = Variable(torch.zeros(1, self.batch_size, self.hidden_size).to(device)) # Initial hidden state of the LSTM
-              c_0 = Variable(torch.zeros(1, self.batch_size, self.hidden_size).to(device)) # Initial cell state of the LSTM
 
-              h_1 = Variable(torch.zeros(1, self.batch_size, self.hidden_size).to(device)) # Initial hidden state of the LSTM
-              c_1 = Variable(torch.zeros(1, self.batch_size, self.hidden_size).to(device)) # Initial cell state of the LSTM
-        else:
-              h_0 = Variable(torch.zeros(1, length[0], self.hidden_size_bi).to(device))
-              c_0 = Variable(torch.zeros(1, length[0], self.hidden_size_bi).to(device))
+        hb_0 = Variable(torch.zeros(self.layers_bi, length[0], self.hidden_size_bi).to(device))
+        cb_0 = Variable(torch.zeros(self.layers_bi, length[0], self.hidden_size_bi).to(device))
 
-              h_1 = Variable(torch.zeros(1, length[1], self.hidden_size).to(device))
-              c_1 = Variable(torch.zeros(1, length[1], self.hidden_size).to(device))
+        h_0 = Variable(torch.zeros(self.layers, length[1], self.hidden_size).to(device))
+        c_0 = Variable(torch.zeros(self.layers, length[1], self.hidden_size).to(device))
 
 
-        output_bi, _ = self.lstm_bi(embed, (h_0,c_0))
+        output_bi, _ = self.lstm_bi(embed_bi, (hb_0,cb_0))
         final_output_bi = self.label_bi(output_bi[:,-1,:])
 
-        output, _ = self.lstm(embed, (h_1,c_1))
-        final_output = self.label(output[:,-1,:])
+     #   output, _ = self.lstm(embed, (h_0,c_0))
+     #   final_output = self.label(output[:,-1,:])
 
-        return final_output_bi,final_output
+        return final_output_bi,final_output_bi
 class loss(tnn.Module):
     """
     Class for creating the loss function.  The labels and outputs from your
@@ -163,10 +158,10 @@ class loss(tnn.Module):
     def forward(self, ratingOutput, categoryOutput, ratingTarget, categoryTarget):
         rloss = tnn.functional.cross_entropy(ratingOutput,ratingTarget)
 
-        closs = tnn.functional.cross_entropy(categoryOutput, categoryTarget)
+       # closs = tnn.functional.cross_entropy(categoryOutput, categoryTarget)
 
-        loss = 2 * closs + rloss
-        return loss
+       # loss = 2 * closs + rloss
+        return rloss
 
 net = network()
 lossFunc = loss()
@@ -176,7 +171,7 @@ lossFunc = loss()
 ################################################################################
 
 trainValSplit = 0.8
-batchSize = 32
+batchSize = 128
 epochs = 10
 optimiser = toptim.SGD(net.parameters(), lr=0.01)
 
