@@ -140,7 +140,7 @@ class network(tnn.Module):
         super(network, self).__init__()
 
         binary=[50, 2, 0.5]
-        multl=[300, 2, 0.5]
+        multl=[50, 2, 0.5]
 
         #binary classifier #binary=[hidden size, layer,dropout] for dealing with ratingoutput
         self.batch_size = 32
@@ -150,7 +150,7 @@ class network(tnn.Module):
 
         # Initializing the look-up table.
 
-        self.lstm_bi= tnn.LSTM(wordVectorDimension,self.hidden_size_bi, self.layers_bi,bidirectional = True)
+        self.lstm_bi= tnn.LSTM(wordVectorDimension,self.hidden_size_bi, self.layers_bi,batch_first=True,bidirectional = True,dropout=binary[2])
         self.label_L1_bi = tnn.Linear(self.hidden_size_bi * self.layers_bi * 2, 64)
         self.Relu_bi = tnn.Tanh()
         self.label_L2_bi = tnn.Linear(64, 2)
@@ -164,30 +164,20 @@ class network(tnn.Module):
 
         # Initializing the look-up table.
 
-        self.gru = torch.nn.GRU(wordVectorDimension, self.hidden_size, self.layers, batch_first=True,bidirectional=True)
-        self.fc1 = torch.nn.Linear(self.hidden_size*2, 150)
-        self.fc2 = torch.nn.Linear(150, 5)
-        self.dropout = tnn.Dropout(multl[2])
+        self.gru = tnn.GRU(wordVectorDimension, self.hidden_size, self.layers, batch_first=True,bidirectional=True,dropout=multl[2])
+        self.fc1 = tnn.Linear(self.hidden_size*2, 150)
+        self.fc2 = tnn.Linear(150, 5)
 
     def forward(self, input, length):
 
-        embed_bi=self.dropout_bi(input)
 
-        embed=self.dropout(input)
-
-        h_0_bi = Variable(torch.zeros(self.layers_bi * 2, length[0], self.hidden_size_bi).to(device))
-        c_0_bi = Variable(torch.zeros(self.layers_bi * 2, length[0], self.hidden_size_bi).to(device))
-
-        h_0 = Variable(torch.zeros(self.layers * 2, self.batch_size, self.hidden_size).to(device))
-
-
-        output_bi, _ = self.lstm_bi(embed_bi, (h_0_bi,c_0_bi))
+        output_bi, _ = self.lstm_bi(input)
         x_bi = torch.cat((output_bi[:, -1, :], output_bi[:, 0, :]), dim=1)
         x_bi = self.label_L1_bi(x_bi)
         x_bi = self.Relu_bi(x_bi)
         final_output_bi = self.label_L2_bi(x_bi)
 
-        output, _ = self.gru(embed, h_0)
+        output, _ = self.gru(input)
         output = self.fc1(output)
         output = self.fc2(output)
         final_output = output[:,-1,:]
@@ -221,5 +211,5 @@ lossFunc = loss()
 
 trainValSplit = 0.9
 batchSize = 32
-epochs = 5
+epochs = 1
 optimiser = toptim.Adam(net.parameters(), lr=0.005)
