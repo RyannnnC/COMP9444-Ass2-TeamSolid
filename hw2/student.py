@@ -55,10 +55,35 @@ def preprocessing(sample):
         return False
 
     result = []
-    symbols = [",",".","?","!","(",")","$","~","n't","'ve","'m'"]
+    symbols = [",",".","?","!","(",")","$","~"]
     for data in sample:
         for sym in symbols:
             data = data.replace(sym,"")
+        """
+        identation reverse
+        """    
+        data=data.replace("isn't","is not")
+        data=data.replace("aren't","are not")
+        data=data.replace("wasn't","was not")
+        data=data.replace("weren't","were not")
+        data=data.replace("doesn't","does not")
+        data=data.replace("don't","do not")
+        data=data.replace("didn't","did not")
+        data=data.replace("haven't","have not")
+        data=data.replace("hasn't","has not")
+        data=data.replace("hadn't","had not")
+        data=data.replace("i've","i have")
+        data=data.replace("i'm","i am")
+        data=data.replace("wouldn't","would not")
+        data=data.replace("shouldn't","should not")
+        data=data.replace("couldn't","could not")
+        data=data.replace("won't","will not")
+        data=data.replace("shan't","shall not")
+        data=data.replace("needn't","need not")
+        data=data.replace("mustn't","must not")
+        data=data.replace("mightn't","might not")
+        data=data.replace("should've","should have")
+
         if data.isalpha()and len(data)>1 and isword(data):
             result.append(data)
 
@@ -77,7 +102,7 @@ def postprocessing(batch, vocab):
 
     return batch
 
-stopWords = {'i', 'me', 'my', 'myself', 'we', 'our', 'ours', 'ourselves', 'you', "you're", "you've", "you'll", "you'd", 'your', 'yours', 'yourself', 'yourselves', 'he', 'him', 'his', 'himself', 'she', "she's", 'her', 'hers', 'herself', 'it', "it's", 'its', 'itself', 'they', 'them', 'their', 'theirs', 'themselves', 'what', 'which', 'who', 'whom', 'this', 'that', "that'll", 'these', 'those', 'am', 'is', 'are', 'was', 'were', 'be', 'been', 'being', 'have', 'has', 'had', 'having', 'do', 'does', 'did', 'doing', 'a', 'an', 'the', 'and', 'but', 'if', 'or', 'because', 'as', 'until', 'while', 'of', 'at', 'by', 'for', 'with', 'about', 'against', 'between', 'into', 'through', 'during', 'before', 'after', 'above', 'below', 'to', 'from', 'up', 'down', 'in', 'out', 'on', 'off', 'over', 'under', 'again', 'further', 'then', 'once', 'here', 'there', 'when', 'where', 'why', 'how', 'all', 'any', 'both', 'each', 'few', 'more', 'most', 'other', 'some', 'such', 'no', 'nor', 'not', 'only', 'own', 'same', 'so', 'than', 'too', 'very', 's', 't', 'can', 'will', 'just', 'don', "don't", 'should', "should've", 'now', 'd', 'll', 'm', 'o', 're', 've', 'y', 'ain', 'aren', "aren't", 'couldn', "couldn't", 'didn', "didn't", 'doesn', "doesn't", 'hadn', "hadn't", 'hasn', "hasn't", 'haven', "haven't", 'isn', "isn't", 'ma', 'mightn', "mightn't", 'mustn', "mustn't", 'needn', "needn't", 'shan', "shan't", 'shouldn', "shouldn't", 'wasn', "wasn't", 'weren', "weren't", 'won', "won't", 'wouldn', "wouldn't"}
+stopWords = {'i', 'me', 'my', 'myself', 'we', 'our', 'ours', 'ourselves', 'you', "you're", "you've", "you'll", "you'd", 'your', 'yours', 'yourself', 'yourselves', 'he', 'him', 'his', 'himself', 'she', "she's", 'her', 'hers', 'herself', 'it', "it's", 'its', 'itself', 'they', 'them', 'their', 'theirs', 'themselves', 'what', 'which', 'who', 'whom', 'this', 'that', "that'll", 'these', 'those', 'am', 'is', 'are', 'was', 'were', 'be', 'been', 'being', 'have', 'has', 'had', 'having', 'do', 'does', 'did', 'doing', 'a', 'an', 'the', 'and', 'but', 'if', 'or', 'because', 'as', 'until', 'while', 'of', 'at', 'by', 'for', 'with', 'about', 'against', 'between', 'into', 'through', 'during', 'before', 'after', 'above', 'below', 'to', 'from', 'up', 'down', 'in', 'out', 'on', 'off', 'over', 'under', 'again', 'further', 'then', 'once', 'here', 'there', 'when', 'where', 'why', 'how', 'all', 'any', 'both', 'each', 'few', 'more', 'most', 'other', 'some', 'such', 'no', 'nor', 'not', 'only', 'own', 'same', 'so', 'than', 'too', 'very', 's', 't', 'can', 'will', 'just', 'should', 'now', 'd', 'll', 'm', 'o', 're', 've', 'y', 'ain',  'ma'}
 wordVectorDimension = 300
 wordVectors = GloVe(name='6B', dim=wordVectorDimension)
 
