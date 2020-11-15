@@ -98,12 +98,12 @@ class network(tnn.Module):
 
     def __init__(self):
         super(network, self).__init__()
-        multl=[50, 1, 0.5]
+        multl=[50, 2, 0.5]
 
-        binary=[50, 1, 0.5]
+        binary=[50, 2, 0.5]
         
         #binary classifier #binary=[hidden size, layer,dropout] for dealing with ratingoutput
-        self.batch_size = batchSize
+        self.batch_size = 32
 
         self.hidden_size_bi = binary[0]
         self.layers_bi = binary[1]
@@ -131,16 +131,23 @@ class network(tnn.Module):
         embed=self.dropout(input)
         
         if length is None:
-              h_0 = Variable(torch.zeros(1, self.batch_size, self.hidden_size).cuda()) # Initial hidden state of the LSTM
-              c_0 = Variable(torch.zeros(1, self.batch_size, self.hidden_size).cuda()) # Initial cell state of the LSTM
+              h_0 = Variable(torch.zeros(1, self.batch_size, self.hidden_size).to(device)) # Initial hidden state of the LSTM
+              c_0 = Variable(torch.zeros(1, self.batch_size, self.hidden_size).to(device)) # Initial cell state of the LSTM
+
+              h_1 = Variable(torch.zeros(1, self.batch_size, self.hidden_size).to(device)) # Initial hidden state of the LSTM
+              c_1 = Variable(torch.zeros(1, self.batch_size, self.hidden_size).to(device)) # Initial cell state of the LSTM
         else:
-              h_0 = Variable(torch.zeros(1, length, self.hidden_size).cuda())
-              c_0 = Variable(torch.zeros(1, length, self.hidden_size).cuda())
+              h_0 = Variable(torch.zeros(1, length[0], self.hidden_size_bi).to(device))
+              c_0 = Variable(torch.zeros(1, length[0], self.hidden_size_bi).to(device))
+
+              h_1 = Variable(torch.zeros(1, length[1], self.hidden_size).to(device))
+              c_1 = Variable(torch.zeros(1, length[1], self.hidden_size).to(device))
+
 
         output_bi, _ = self.lstm_bi(embed, (h_0,c_0))
-        final_output_bi = self.label_bi(output[:,-1,:])
+        final_output_bi = self.label_bi(output_bi[:,-1,:])
 
-        output, _ = self.lstm(embed, (h_0,c_0))
+        output, _ = self.lstm(embed, (h_1,c_1))
         final_output = self.label(output[:,-1,:])
 
         return final_output_bi,final_output
