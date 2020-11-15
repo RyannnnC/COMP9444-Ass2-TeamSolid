@@ -135,8 +135,8 @@ class network(tnn.Module):
         h_0_bi = Variable(torch.zeros(self.layers_bi, length[0], self.hidden_size_bi).to(device))
         c_0_bi = Variable(torch.zeros(self.layers_bi, length[0], self.hidden_size_bi).to(device))
 
-        h_0 = Variable(torch.zeros(self.layers, length[1], self.hidden_size).to(device))
-        c_0 = Variable(torch.zeros(self.layers, length[1], self.hidden_size).to(device))
+        h_0 = Variable(torch.zeros(self.layers, length[0], self.hidden_size).to(device))
+        c_0 = Variable(torch.zeros(self.layers, length[0], self.hidden_size).to(device))
 
 
         output_bi, _ = self.lstm_bi(embed_bi, (h_0_bi,c_0_bi))
@@ -145,7 +145,7 @@ class network(tnn.Module):
         output, _ = self.lstm(embed, (h_0,c_0))
         final_output = self.label(output[:,-1,:])
 
-        return final_output_bi,final_output_bi
+        return final_output_bi,final_output
 class loss(tnn.Module):
     """
     Class for creating the loss function.  The labels and outputs from your
