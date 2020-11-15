@@ -209,7 +209,7 @@ lossFunc = loss()
 ################## The following determines training options ###################
 ################################################################################
 
-trainValSplit = 0.9
+trainValSplit = 0.85
 batchSize = 32
-epochs = 1
-optimiser = toptim.Adam(net.parameters(), lr=0.005)
+epochs = 10
+optimiser = toptim.Adam(net.parameters(), lr=0.001)
