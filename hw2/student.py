@@ -152,7 +152,7 @@ class network(tnn.Module):
 
         self.lstm_bi= tnn.LSTM(wordVectorDimension,self.hidden_size_bi, self.layers_bi,batch_first=True,bidirectional = True,dropout=binary[2])
         self.label_L1_bi = tnn.Linear(self.hidden_size_bi * self.layers_bi * 2, 64)
-        self.Relu_bi = tnn.Tanh()
+        self.Relu_bi = tnn.ReLU()
         self.label_L2_bi = tnn.Linear(64, 2)
         self.dropout_bi = tnn.Dropout(binary[2])
 
