@@ -123,3 +123,6 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+*.txt
+hw2/.vector_cache/glove.6B.300d.txt.pt
+hw2/.vector_cache/glove.6B.zip
