@@ -61,7 +61,7 @@ def preprocessing(sample):
             data = data.replace(sym,"")
         """
         identation reverse
-        """    
+        """
         data=data.replace("isn't","is not")
         data=data.replace("aren't","are not")
         data=data.replace("wasn't","was not")
@@ -213,4 +213,4 @@ lossFunc = loss()
 trainValSplit = 0.8
 batchSize = 32
 epochs = 10
-optimiser = toptim.SGD(net.parameters(), lr=0.01)
+optimiser = toptim.Adam(net.parameters(), lr=0.01)
