@@ -110,6 +110,8 @@ class network(tnn.Module):
 
     def forward(self, input, length):
         
+        embed=self.dropout(x)
+        
 		if length is None:
 			h_0 = Variable(torch.zeros(1, self.batch_size, self.hidden_size).cuda()) # Initial hidden state of the LSTM
 			c_0 = Variable(torch.zeros(1, self.batch_size, self.hidden_size).cuda()) # Initial cell state of the LSTM
