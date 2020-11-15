@@ -152,7 +152,7 @@ class network(tnn.Module):
 
         self.lstm_bi= tnn.LSTM(wordVectorDimension,self.hidden_size_bi, self.layers_bi,bidirectional = True)
         self.label_L1_bi = tnn.Linear(self.hidden_size_bi * self.layers_bi * 2, 64)
-        self.Relu_bi = tnn.ReLU()
+        self.Relu_bi = tnn.Tanh()
         self.label_L2_bi = tnn.Linear(64, 2)
         self.dropout_bi = tnn.Dropout(binary[2])
 
@@ -165,9 +165,9 @@ class network(tnn.Module):
         # Initializing the look-up table.
 
         self.lstm= tnn.LSTM(wordVectorDimension, self.hidden_size, self.layers,bidirectional = True)
-        self.label_L1 = tnn.Linear(self.hidden_size * self.layers * 2, 64)
-        self.Relu = tnn.ReLU()
-        self.label_L2 = tnn.Linear(64, 5)
+        self.label_L1 = tnn.Linear(self.hidden_size * self.layers * 2, 100)
+        self.Relu = tnn.Tanh()
+        self.label_L2 = tnn.Linear(100, 5)
         self.dropout = tnn.Dropout(multl[2])
 
     def forward(self, input, length):
@@ -224,5 +224,5 @@ lossFunc = loss()
 
 trainValSplit = 0.9
 batchSize = 32
-epochs = 10
-optimiser = toptim.Adam(net.parameters(), lr=0.01)
+epochs = 5
+optimiser = toptim.Adam(net.parameters(), lr=0.005)
