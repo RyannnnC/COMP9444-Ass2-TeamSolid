@@ -178,7 +178,7 @@ class network(tnn.Module):
         self.label_L1_bi = tnn.Linear(self.hidden_size_bi * self.layers_bi * 2, 64)
         self.Relu_bi = tnn.ReLU()
         self.label_L2_bi = tnn.Linear(64, 2)
-        self.dropout_bi = tnn.Dropout(binary[2])
+        # output(0,1)
 
 
         #multi classifier #multi=[hidden size, layer,dropout] for dealing with businesscatogary
@@ -191,20 +191,22 @@ class network(tnn.Module):
         self.gru = tnn.GRU(wordVectorDimension, self.hidden_size, self.layers, batch_first=True,bidirectional=True,dropout=multl[2])
         self.fc1 = tnn.Linear(self.hidden_size*2, 150)
         self.fc2 = tnn.Linear(150, 5)
+        # output(0,1,2,3,4)
 
     def forward(self, input, length):
 
-
+        # Network structure: LSTM (bidirectional) -> Linear1 -> Relu -> Linear2 -> output
         output_bi, _ = self.lstm_bi(input)
         x_bi = torch.cat((output_bi[:, -1, :], output_bi[:, 0, :]), dim=1)
-        x_bi = self.label_L1_bi(x_bi)
-        x_bi = self.Relu_bi(x_bi)
-        final_output_bi = self.label_L2_bi(x_bi)
+        L1_bi = self.label_L1_bi(x_bi)
+        L2_bi = self.Relu_bi(L1_bi)
+        final_output_bi = self.label_L2_bi(L2_bi)
 
+        # Network structure: GRU (bidirectional) -> Linear1 -> Linear2 -> output
         output, _ = self.gru(input)
-        output = self.fc1(output)
-        output = self.fc2(output)
-        final_output = output[:,-1,:]
+        L1 = self.fc1(output)
+        L2 = self.fc2(L1)
+        final_output = L2[:,-1,:]
 
         return final_output_bi,final_output
 
