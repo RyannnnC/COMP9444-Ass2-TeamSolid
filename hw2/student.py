@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 """
+This program is done by group Team-SOLID
+
 Answer to the question:
 For the pre-processing, we remove the useless symbols and punctuation by simple for loop.
 and we reverse the identations by simply replace them. We also defined a function to remove
@@ -8,39 +10,19 @@ the efficiency of network learning, we remove some infrequent words from the tex
 analyse the dataset
 
 We use bidirectional - LSTM to model the stucture of the network as well as GRU. With the following
-flow. Lstm -> Linear -> relu() -> Linear -> Output. Also, we use dropout rate of 0.5 after several
-tests in case of over-fitting. For the loss function, we use common loss function that is provided
-by the torch which combines log_softmax and nll_loss in a single function. Since rating correct
-and category correct have different score. we decided to set loss of rating output two times of loss
-of category output in order to increse correctness of rating output.
+flow. Lstm -> Linear -> relu() -> Linear -> Output. Using tanh would reduce the accuracy, hence we
+use relu here. Also, we use dropout rate of 0.5 after several tests in case of over-fitting. For the
+loss function, we use common loss function that is provided by the torch which combines log_softmax
+and nll_loss in a single function. Since rating correct and category correct have different score.
+we decided to set loss of rating output two times of loss of category output in order to increse
+correctness of rating output.
 
 For the parameters that we have chosen, we use 300 instead of 50 or 100 because it is fastest of the
 rest when training. We made changes to training parameters as well. We use trainValSplit ratio 0.85
 instead of defaultvalue 0.8 simply because we want more data to be trained. Moreover, we use Adam as
 optimizer other than SGD since we found Adam is better at converging the loss with a smaller learning
 rate 0.001.We also increase the batch size to 128, but the accuracy decreased so we use default setting
-of 32.The epoch is left as default. 
-
-"""
-
-"""
-student.py
-
-UNSW COMP9444 Neural Networks and Deep Learning
-
-You may modify this file however you wish, including creating additional
-variables, functions, classes, etc., so long as your code runs with the
-hw2main.py file unmodified, and you are only using the approved packages.
-
-You have been given some default values for the variables stopWords,
-wordVectors, trainValSplit, batchSize, epochs, and optimiser, as well as a basic
-tokenise function.  You are encouraged to modify these to improve the
-performance of your model.
-
-The variable device may be used to refer to the CPU/GPU being used by PyTorch.
-You may change this variable in the config.py file.
-
-You may only use GloVe 6B word vectors as found in the torchtext package.
+of 32. The epoch is left as default.
 """
 
 import torch
